@@ -1,0 +1,70 @@
+---
+title: "Neuro midterm results draft"
+format: html
+editor: visual
+---
+
+I loaded every package I could think of just in case I needed anything
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(openintro)
+library(ggplot2)
+library(googlesheets4)
+library(infer)
+library(dabestr)
+```
+
+I imported our dataset as a Google sheet and then printed it out below
+
+```{r}
+results <- read_sheet("https://docs.google.com/spreadsheets/d/1OkSyejbv3KMGpYb0PcAt3joQZw-Bqw4Ej1tQoQGGeHs/edit?usp=sharing")
+print(results)
+```
+```{r}
+(483532.00	+ 650011.00	+ 103309.00)/3 
+```
+```{r}
+(65008.46	+ 257068.51	+ 137805.52	)/3
+```
+```{r}
+(127626.11 + 103347.43 + 0)/3
+```
+
+```{r}
+data_avg <- data.frame(
+  avg_group = c("Control", "30hpf", "34hpf", "37hpf"),
+  average = c(0, 412284,153294.2,76991.18)
+)
+print(data_avg)
+```
+
+```{r}
+g <- data_avg |>
+  ggplot(
+    mapping = aes(
+      x = Group,
+      y = Value
+    )
+  ) + 
+  geom_bar() 
+```
+
+
+I created a multivariable graph that shows bleed volumes for each fish divided into treatment groups
+
+```{r}
+ggplot(results, aes(x = Group, y = Value)) +
+  geom_point(position = "jitter") +
+  labs(x = "Treatment group",
+       y = "Bleed volume") +
+  theme_grey() +
+    scale_fill_brewer(palette = "Set1")
+```
+
+
+
+
+
+
