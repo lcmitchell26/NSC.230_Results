@@ -1,0 +1,40 @@
+---
+title: "Results"
+format: pdf
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(googlesheets4)
+library(infer)
+library(readr)
+results_data<-read_sheet("https://docs.google.com/spreadsheets/d/1OkSyejbv3KMGpYb0PcAt3joQZw-Bqw4Ej1tQoQGGeHs/edit?gid=0#gid=0")
+```
+
+
+```{r}
+data <- data.frame(
+  Group = c("30hpf", "34hpf", "37hpf", "control"),
+  average = c(412286, 153294.2, 115486, 1000)
+)
+data
+```
+
+```{r}
+data_long <- data %>%
+  pivot_longer(cols = c(average), names_to = "Component", values_to = "Value")
+data_long
+```
+
+```{r}
+ggplot(data_long, aes(x = Group, y = Value)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7)) +
+  labs(title = "Bleed Volumes",
+       x = "Treatment Group",
+       y = "Bleed Volume (cubic micrometers)") +
+  theme_grey() +
+    scale_fill_brewer(palette = "Set1")
+```
+
