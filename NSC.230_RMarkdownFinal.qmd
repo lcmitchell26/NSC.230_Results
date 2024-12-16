@@ -1,0 +1,220 @@
+---
+title: "NSC.230 Independant Project Data Analysis Results"
+author: "Lily Claire Mitchell"
+format: 
+    html:
+      embed-resources: false
+code-fold: false
+execute: 
+  echo: true 
+knitr: 
+  opts_chunk: 
+    message: false
+    warning: false 
+editor: source 
+---
+
+```{r}
+#| eval: true
+#| echo: false
+#| message: false
+
+library(tidyverse)
+library(googlesheets4)
+library(ggplot2)
+library(dplyr)
+library(janitor)
+library(moderndive)
+library(knitr)
+library(infer)
+```
+
+# A Study on the Effects of Guanabenz Acetate on Hemorrhagic Stroke in *Danio Rerio*
+
+Allison Bleicher, Li Le Kaplow, Lily Mitchell, Delia Parco
+
+# Introduction
+
+Intracerebral hemorrhage (ICH) is an often fatal condition with no cure and few treatments. This study explores the effect of guanabenz acetate as a pre-treatment for ICH through bleed volume and occurrence rate. Guanabenz acetate is an antihypertensive alpha2A-adrenergic receptor antagonist that has been used in humans. While studies have been done using ACE inhibitors pre and post-ICH in clinical studies, no studies have used other types of antihypertensives. Through in vivo imaging of fluorescent reporter lines, bleed volume was quantified.
+
+![Zebrafish](https://t4.ftcdn.net/jpg/06/94/22/47/240_F_694224756_Nk6PYcV6RGNNVqEQpcHNDi7EkYnaKfbu.jpg){fig-align="center" width="150"}
+
+### Research Question
+
+Can pre-treatment with guanabenz acetate reduce the incidence and/or volume of hemorrhage in cases of intracerebral hemorrhage (ICH)?
+
+### Hypothesis Test
+
+##### Null Hypothesis:
+
+There is no realtionship between dosage of guanabenz acetate and the volume of ICH. $$
+\mu_{GA} - \mu_{Volume} = 0
+$$
+
+##### Alternative Hypothesis:
+
+There is a relationship between dosage of guanabenz acetate and the volume of ICH. $$
+\mu_{GA} - \mu_{Volume} \ne 0
+$$
+
+### Data Import
+
+```{r}
+#| label: tbl-visual-1
+#| tbl-cap: "Experiment Data"
+#| eval: true
+#| echo: false
+#| message: false
+bleed_volumes <- read_sheet("https://docs.google.com/spreadsheets/d/12Qlx_zTiB5Vhf39OD4wL2u2Js3kZt-fW0igZLI9Vmpk/edit?gid=0#gid=0")
+kable(bleed_volumes)
+```
+
+### ICH Frequency Observational Study
+
+```{r}
+#| label: tbl-visual-2
+#| tbl-cap: "Bleed Frequency Observational Study"
+#| eval: true
+#| echo: false
+#| message: false
+bleed_frequency <- tibble(
+  group = c("DMSO", "GA25µM", "GA50µM", "GA75µM", "zGA100µM", "ATVµM"),
+  ICH = c("0%", "62%", "50%", "70%", "84%", "100%"),
+  no_bleed = c("100%", "38%", "50%", "30%", "16%", "0%")
+)
+kable(bleed_frequency)
+```
+
+[^1]
+
+[^1]: In order to keep the correct sequence of Dosage of GA that make the most sence for interpreting the visualization, the letter "z" had to be added in front of GA 100 µM. R reads in alphabetical order and then numericly 1-9 exclusivly increasing. This method is used as an elementry solution throughout the analysis and should not be interpreted otherwise.
+
+### Increasing ICH Frequency
+
+```{r}
+#| label: tbl-visual-3
+#| tbl-cap: "Increasing ICH Frequency" 
+#| eval: true 
+#| echo: false 
+#| message: false 
+bleed_frequency |> 
+  group_by(group)|> 
+ggplot(aes(x=group, y=ICH, color = group)) +
+  geom_boxplot() + 
+  theme_gray(18) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Increasing ICH Frequency") 
+```
+
+### Bleed Volumes Quantification
+
+```{r}
+#| label: tbl-visual-4
+#| tbl-cap: "GA Treatment Dosage Bleed Volumes"
+#| eval: true
+#| echo: false
+#| message: false
+bleed_volume_graph <- tibble(
+  treatment_µM = c("ATVµM", "GA25µM", "GA25µM", "GA50µM", "GA50µM", "GA75µM", "GA75µM", "zGA100µM", "zGA100µM"),
+  volume_µM3 = c("284270.1209", "71086.10985","114838.2534", "55616.32124", "147730", "98340.42944", "148401.428", "243317.8139", "458571.8753")
+)
+kable(bleed_volume_graph)
+```
+
+### Increasing Bleed Volumes
+
+```{r}
+#| label: tbl-visual-5 
+#| tbl-cap: "Increasing Bleed Volumes with Dosage of GA" 
+#| eval: true 
+#| echo: false 
+#| message: false 
+bleed_volume_graph |> 
+  group_by(treatment_µM)|> 
+ggplot(aes(x=treatment_µM, y=volume_µM3, color = treatment_µM)) +
+  geom_boxplot() + 
+  theme_gray(18) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Increasing Bleed Volumes") 
+```
+
+### P-value and Standard Error for Indevidual Treatment Groups
+
+```{r}
+#| eval: true
+#| echo: false
+#| message: false
+bleed_volumes_regression <- lm(volume_µM3 ~ treatment_µM, data = bleed_volume_graph) 
+get_regression_table(bleed_volumes_regression)  
+```
+
+### Average Bleed Volumes for GA Dosages
+
+```{r}
+#| eval: true
+#| echo: false
+#| message: false
+average_bleed_vol <- tibble(
+  treatment = c("GA25µM", "GA50µM", "GA75µM", "zGA100µM"),
+  avg_volume_µM3 = c("92962.2", "101673.1", "123370.9", "350944.8")
+)
+kable(average_bleed_vol)
+```
+
+### Increasing Average Bleed Volumes
+
+```{r}
+#| label: tbl-visual-6 
+#| tbl-cap: "Increasing Average Bleed Volumes" 
+#| eval: true 
+#| echo: false 
+#| message: false 
+average_bleed_vol |> 
+  group_by(treatment)|> 
+ggplot(aes(x=treatment, y=avg_volume_µM3, color = treatment)) +
+  geom_boxplot() + 
+  theme_gray(18) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Increasing Average Bleed Volumes") 
+```
+
+##### Analysis Between All Treatment Groups
+
+```{r}
+#| eval: true 
+#| echo: false 
+#| message: false
+all_groups <- tibble(
+  p_value = c("0.0587")
+)
+all_groups
+```
+
+##### Analysis Between 50um and ATV Treatment
+
+```{r}
+#| eval: true 
+#| echo: false 
+#| message: false
+optimal_dose <- tibble(
+  p_value = c("0.05813")
+)
+optimal_dose
+```
+
+## Results 
+
+### Data Analysis 
+The analyses found that the difference in bleed volumes between the treatment groups was slightly insignificant. In an observational pilot, the frequency of ICH was visually counted and recorded from treatment groups with n = 25 embryos. This data was converted into percentages of positive or negative ICH instances per treatment group and was graphed to indicate the best possible range of doses for the subsequent trials and additionally quantified (Figure 2) The mean volume of each treatment group was additionally calculated and graphed (Figure 3). The visualizations using bar graphs and box plots accurately capture detail and effectively characterize the data. 
+
+### Statistical Analysis
+An ANOVA test was used to conduct a statistical analysis of our results. It hypothesized no significant relationship between the dosage of guanabenz acetate and the volume of ICH. The analysis of average bleed volumes across treatment groups of guanabenz acetate has shown a high amount of variability, but enticing trends to investigate in future studies. Our analysis concluded that there was no significant interaction between the guanabenz acetate dosages and bleed volume, F(4, 5) = 4.7642, p = 0.0587, ƞ2 = 0.8944. The ANOVA test results conclude that the p-value falls just above the boundary for attributing statistical significance. With a p-value that is not greater than 0.05 (our chosen ɑ level), results cannot be considered statistically significant. 
+
+The 50 µM treatment group experienced the lowest average bleed volume of 101,673.1µM3 (Figure 3). These results align with our study in which the rate of bleeding in the brain was also the lowest, with a frequency of 50%, indicating it to be the most effective (Figure 2). Additionally, this relates to recent research, which found the optimal dosage of guanabenz acetate in c. elegans to also be 50 µM (Vaccaro et al., 2013). 
+
+To quantitatively confirm this dosage, we were prompted to run further ANOVA tests comparing the average bleed volume of 50 µM guanabenz acetate to the ATV-only control group. However, our analysis concluded that there was also no significant interaction between 50 µM of guanabenz acetate dosages and bleed volume, F(1,2) = 15.7181, p = 0.0581, ƞ2  = 0.7071. This p-value is also slightly above the -level of statistical significance. These results led us to conclude that we cannot determine any significant results.
+
+
+![Dosage Trials](https://github.com/lcmitchell26/NSC.230_Results/blob/main/DosageTrials.png?raw=true){width="250"} ![Increasing Bleed Volume](https://github.com/lcmitchell26/NSC.230_Results/blob/main/IncreasingBleedVolume.png?raw=true){width="250"}\
+
+###### *50 µM Guanabenz Acetate Trend*
